@@ -1,0 +1,453 @@
+Prompt — Sistema IoT ESP8266 para Monitoramento de Temperatura e Controle Remoto de Relé
+
+Desenvolver um sistema IoT profissional utilizando ESP8266 (NodeMCU/Wemos D1 Mini) para monitoramento de temperatura através do sensor DS18B20 e acionamento remoto de um relé, integrado a uma API em PHP.
+
+O projeto deve ser modular, altamente confiável, preparado para produção e permitir futuras atualizações OTA.
+
+Hardware
+
+Microcontrolador
+
+ESP8266
+
+Entradas/Saídas
+
+DS18B20 → GPIO5 (D1)
+Relé → GPIO4 (D2)
+LED de Status → GPIO2 (LED interno)
+Comportamento do LED
+
+O LED deve indicar o estado do dispositivo.
+
+Estado	Comportamento
+Sem configuração	Pisca rapidamente (200 ms)
+Conectando ao Wi-Fi	Pisca lentamente (800 ms)
+Operação normal	Aceso continuamente
+Erro crítico	Pisca duplo a cada 2 segundos
+Modo AP	Pisca continuamente em 500 ms
+Fluxo de Inicialização
+
+Ao energizar:
+
+Inicializar GPIOs.
+Inicializar LittleFS.
+Inicializar DS18B20.
+Ler configurações salvas.
+Caso não existam configurações:
+entrar automaticamente em modo AP.
+Caso existam:
+conectar ao Wi-Fi.
+Após conectar:
+sincronizar com servidor.
+Aplicar parâmetros recebidos.
+Entrar em operação normal.
+
+O Access Point somente ficará ativo quando:
+
+primeira configuração
+perda das configurações
+erro de leitura do LittleFS
+restauração de fábrica
+
+Nunca manter AP ativo durante operação normal.
+
+Modo AP
+
+SSID
+
+MFMANUTEC-XXXX
+
+onde
+
+XXXX = ChipID do ESP8266
+
+Sem senha.
+
+IP padrão
+
+192.168.4.1
+
+Abrir automaticamente o portal de configuração (Captive Portal).
+
+Wizard de Configuração
+Tela 1
+
+Mensagem:
+
+Bem-vindo
+
+Vamos configurar seu dispositivo.
+
+Clique em Iniciar Configuração.
+
+Botão
+
+Iniciar Configuração
+Tela 2
+
+Busca automática das redes Wi-Fi.
+
+Exibir:
+
+SSID
+Intensidade do sinal
+
+Selecionar rede.
+
+Caso protegida:
+
+Mostrar campo senha.
+
+Botão
+
+Conectar
+Tela 3
+
+Mostrar progresso
+
+Conectando ao Wi-Fi...
+
+Obtendo IP...
+
+Conectado com sucesso.
+
+Se erro:
+
+Mostrar motivo.
+
+Permitir tentar novamente.
+
+Tela 4
+
+Após conectar ao Wi-Fi
+
+Enviar requisição para API
+
+http://www.mfmanutec.com.br/api/iot/receive.php
+JSON enviado
+{
+  "codigo": "07",
+  "chip_id": "CHIP_ID_ESP8266",
+  "assinatura": "SHA256(CHIP_ID + 'MFMANUTEC@2026#IoT!Secure$Key')",
+  "data": {
+    "mac": "MAC_DO_ESP",
+    "firmware": "1.0.0",
+    "temperatura": 24.7,
+    "wifi": -63,
+    "tensao": 3.29,
+    "relay_state": 0
+  }
+}
+Assinatura
+
+Utilizar
+
+SHA256
+
+Entrada
+
+chip_id + "MFMANUTEC@2026#IoT!Secure$Key"
+
+Nunca transmitir a chave.
+
+Resposta da API
+
+Exemplo
+
+{
+    "codigo":100,
+    "config":{
+        "status":"Ativo",
+        "cliente":"Cliente Teste",
+        "descricao":"Boiler",
+        "local_instalacao":"TESTE",
+        "sem_configuracao":false,
+        "expected_interval":60,
+        "min_temperature":30,
+        "max_temperature":80,
+        "relay_state":1
+    }
+}
+Tela Final
+
+Mostrar
+
+Chip iD
+
+MAC
+
+Cliente
+
+Descrição
+
+Local de instalação
+
+Intervalo de envio
+
+Temperatura mínima
+
+Temperatura máxima
+
+Estado do Relé
+
+Status
+
+Botão
+
+Concluir Configuração
+
+Ao clicar
+
+Salvar tudo no LittleFS
+
+Reiniciar ESP.
+
+Após reiniciar
+
+Nunca abrir novamente o AP enquanto houver configuração válida.
+
+Estrutura salva no LittleFS
+{
+  "ssid":"",
+  "password":"",
+  "chip_id":"",
+  "cliente":"",
+  "descricao":"",
+  "local_instalacao":"",
+  "expected_interval":60,
+  "min_temperature":30,
+  "max_temperature":80,
+  "status":"Ativo",
+  "relay_state":0,
+  "firmware":"1.0.0"
+}
+Operação Normal
+
+Durante operação:
+
+A cada
+
+expected_interval
+
+segundos
+
+Executar:
+
+Ler temperatura
+Ler RSSI
+Ler tensão
+Ler estado do relé
+Montar JSON
+Enviar à API
+Receber comandos
+Atualizar parâmetros
+Registrar log
+JSON periódico
+{
+    "codigo":"00",
+    "chip_id":"xxxxx",
+    "assinatura":"sha256",
+    "data":{
+        "temperatura":35.8,
+        "wifi":-62,
+        "relay_state":1,
+        "tensao":3.28,
+        "firmware":"1.0.0"
+    }
+}
+Controle Remoto do Relé
+
+O servidor poderá responder
+
+{
+    "codigo":100,
+    "comando":{
+        "relay_state":1
+    }
+}
+
+ou
+
+{
+    "codigo":100,
+    "comando":{
+        "relay_state":0
+    }
+}
+
+O firmware deverá:
+
+validar resposta;
+alterar GPIO4;
+salvar estado;
+confirmar execução no próximo envio.
+Atualização OTA
+
+Caso exista firmware novo
+
+Servidor retorna
+
+{
+  "codigo":100,
+  "atualizacao":{
+      "disponivel":1,
+      "versao":"1.1.0",
+      "url":"https://...",
+      "hash":"SHA256_DO_ARQUIVO"
+  }
+}
+
+Fluxo
+
+Download.
+Verificar hash.
+Atualizar.
+Reiniciar.
+Informar sucesso.
+
+Caso falhe
+
+Registrar código 20.
+
+Segurança
+
+Toda comunicação deverá utilizar:
+
+SHA-256
+Validação do Chip ID
+Validação da assinatura
+Timeout HTTP
+Retry automático
+JSON validado
+Watchdog habilitado
+Máquina de Estados
+BOOT
+
+↓
+
+LittleFS
+
+↓
+
+Existe configuração?
+
+↓
+
+NÃO
+↓
+
+Modo AP
+
+↓
+
+Wizard
+
+↓
+
+Wi-Fi
+
+↓
+
+Servidor
+
+↓
+
+Salvar
+
+↓
+
+Reiniciar
+
+↓
+
+Operação Normal
+Tratamento de Falhas
+
+Sempre registrar:
+
+motivo
+código
+timestamp
+uptime
+Tabela Oficial de Códigos
+Códigos do Dispositivo (0–44)
+Código	Descrição
+0	Operação normal
+1	Falha ao detectar o sensor DS18B20
+2	Temperatura inválida (-127°C)
+3	Erro de leitura do sensor
+4	Temperatura fora da faixa permitida
+5	Relé não respondeu ao comando
+6	GPIO configurada inválida
+7	Configuração não encontrada
+8	Erro ao salvar configurações
+9	Erro ao ler configurações
+10	Wi-Fi desconectado
+11	Falha na autenticação Wi-Fi
+12	Servidor indisponível
+13	Timeout HTTP
+14	Assinatura inválida
+15	Chip ID não cadastrado
+16	Erro ao montar LittleFS
+17	Heap baixa
+18	Watchdog acionado
+19	Reinicialização inesperada
+20	Erro OTA
+21	Firmware incompatível
+22	Tensão baixa
+23	Tensão alta
+24	Erro interno
+25	JSON inválido
+26	Erro ao enviar JSON
+27	Resposta inválida da API
+28	DNS não encontrado
+29	Gateway inacessível
+30	Falha na sincronização
+31	Reinicialização remota
+32	Reinicialização por falta de energia
+33	Modo Access Point ativo
+34	Configuração restaurada
+35	Sensor desconectado
+36	Erro de memória Flash
+37	Excesso de tentativas Wi-Fi
+38	Timeout de inicialização
+39	Temperatura crítica
+40	Sistema em manutenção
+41	Configuração sincronizada
+42	Falha na sincronização de configuração
+43	Comando executado com sucesso
+44	Falha ao executar comando
+Códigos do Servidor (100–107)
+Código	Descrição
+100	Operação executada com sucesso
+101	Erro interno do servidor
+102	Payload inválido recebido
+103	Dispositivo não cadastrado
+104	Assinatura inválida
+105	Dispositivo cadastrado
+106	Dispositivo aguardando cadastro
+107	Limite de requisições excedido
+Arquitetura do Firmware
+
+Organizar o projeto em módulos independentes:
+
+main.cpp
+
+ConfigManager
+LittleFSManager
+WiFiManager
+CaptivePortal
+ApiClient
+OTAUpdate
+TemperatureManager
+RelayManager
+LedManager
+Logger
+SystemStatus
+Security
+JsonManager
+DeviceInfo
+Scheduler
+Watchdog
+
+Cada módulo deve possuir responsabilidades bem definidas, baixo acoplamento e alta coesão, facilitando manutenção, testes e futuras expansões do sistema. O firmware deve ser desenvolvido utilizando boas práticas de programação para ESP8266, código orientado a objetos sempre que aplicável, tratamento robusto de erros, consumo otimizado de memória e documentação completa das funções e fluxos do sistema.
