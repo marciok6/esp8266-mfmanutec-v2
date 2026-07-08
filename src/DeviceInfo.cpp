@@ -1,8 +1,8 @@
-#include "DeviceInfo.h"
+#include "../include/DeviceInfo.h"
 
 #include <ESP8266WiFi.h>
 
-#include "AppConfig.h"
+#include "../include/AppConfig.h"
 
 String DeviceInfo::chipId() const { return String(ESP.getChipId(), HEX); }
 

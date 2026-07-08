@@ -1,4 +1,4 @@
-#include "TemperatureManager.h"
+#include "../include/TemperatureManager.h"
 
 TemperatureManager::TemperatureManager(uint8_t pin) : oneWire_(pin), sensors_(&oneWire_) {}
 

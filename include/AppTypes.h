@@ -10,6 +10,11 @@ enum class DeviceState : uint8_t {
   AccessPoint
 };
 
+enum class PortalMode : uint8_t {
+  Provisioning,
+  Diagnostics
+};
+
 enum DeviceCode : int {
   CODE_NORMAL = 0,
   CODE_SENSOR_NOT_FOUND = 1,
@@ -79,6 +84,42 @@ struct ProvisioningRequest {
   bool submitted = false;
   String ssid;
   String password;
+};
+
+struct ProvisioningSummary {
+  bool ready = false;
+  String chipId;
+  String mac;
+  String cliente;
+  String descricao;
+  String localInstalacao;
+  String status;
+  String ip;
+  uint32_t expectedInterval = 0;
+  float minTemperature = 0.0F;
+  float maxTemperature = 0.0F;
+  int relayState = 0;
+};
+
+struct DiagnosticSummary {
+  bool ready = false;
+  int code = CODE_NORMAL;
+  String reason;
+  String chipId;
+  String mac;
+  String apSsid;
+  String stationSsid;
+  String stationIp;
+  String apiEndpoint;
+  String deviceStatus;
+  String cliente;
+  String descricao;
+  String localInstalacao;
+  float temperature = NAN;
+  int wifiRssi = 0;
+  float voltage = 0.0F;
+  int relayState = 0;
+  uint32_t uptime = 0;
 };
 
 struct OtaMetadata {

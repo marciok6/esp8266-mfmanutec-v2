@@ -1,4 +1,4 @@
-#include "WiFiService.h"
+#include "../include/WiFiService.h"
 
 #include <ESP8266WiFi.h>
 
@@ -9,7 +9,8 @@ void WiFiService::beginStation() {
 }
 
 bool WiFiService::connect(const String& ssid, const String& password, uint32_t timeoutMs) const {
-  WiFi.mode(WIFI_STA);
+  const WiFiMode_t currentMode = WiFi.getMode();
+  WiFi.mode((currentMode == WIFI_AP || currentMode == WIFI_AP_STA) ? WIFI_AP_STA : WIFI_STA);
   WiFi.hostname("mfmanutec-device");
   WiFi.begin(ssid.c_str(), password.c_str());
   const uint32_t start = millis();
@@ -20,7 +21,7 @@ bool WiFiService::connect(const String& ssid, const String& password, uint32_t t
   return WiFi.status() == WL_CONNECTED;
 }
 
-void WiFiService::disconnect() const { WiFi.disconnect(true); }
+void WiFiService::disconnect() const { WiFi.disconnect(false); }
 
 bool WiFiService::isConnected() const { return WiFi.status() == WL_CONNECTED; }
 

@@ -1,4 +1,4 @@
-#include "SystemStatus.h"
+#include "../include/SystemStatus.h"
 
 void SystemStatus::setState(DeviceState newState) { state_ = newState; }
 

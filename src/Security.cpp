@@ -1,8 +1,8 @@
-#include "Security.h"
+#include "../include/Security.h"
 
 #include <bearssl/bearssl_hash.h>
 
-#include "AppConfig.h"
+#include "../include/AppConfig.h"
 
 String Security::signatureForChipId(const String& chipId) const {
   return sha256(chipId + AppConfig::SIGNING_SECRET);

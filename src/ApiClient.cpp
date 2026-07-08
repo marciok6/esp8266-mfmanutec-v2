@@ -1,12 +1,12 @@
-#include "ApiClient.h"
+#include "../include/ApiClient.h"
 
 #include <ESP8266HTTPClient.h>
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
 
-#include "AppConfig.h"
-#include "DeviceInfo.h"
-#include "Security.h"
+#include "../include/AppConfig.h"
+#include "../include/DeviceInfo.h"
+#include "../include/Security.h"
 
 ApiClient::ApiClient(const DeviceInfo& deviceInfo, const Security& security)
     : deviceInfo_(deviceInfo), security_(security) {}

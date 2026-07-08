@@ -1,9 +1,9 @@
-#include "ConfigManager.h"
+#include "../include/ConfigManager.h"
 
 #include <ArduinoJson.h>
 #include <LittleFS.h>
 
-#include "AppConfig.h"
+#include "../include/AppConfig.h"
 
 bool ConfigManager::load(DeviceConfig& config) const {
   if (!LittleFS.exists(AppConfig::CONFIG_PATH)) {

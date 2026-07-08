@@ -1,4 +1,4 @@
-#include "OTAUpdate.h"
+#include "../include/OTAUpdate.h"
 
 #include <ESP8266HTTPClient.h>
 #include <ESP8266WiFi.h>
@@ -7,13 +7,12 @@
 
 #include <bearssl/bearssl_hash.h>
 
-#include "Logger.h"
-#include "Security.h"
+#include "../include/Logger.h"
+#include "../include/Security.h"
 
 namespace {
 template <typename TClient>
-bool writeFirmwareStream(TClient& client, const OtaMetadata& metadata, const Security& security, const Logger& logger,
-                         uint32_t uptime) {
+bool writeFirmwareStream(TClient& client, const OtaMetadata& metadata, const Logger& logger, uint32_t uptime) {
   HTTPClient http;
   http.setTimeout(15000);
   if (!http.begin(client, metadata.url)) {
@@ -57,7 +56,6 @@ bool writeFirmwareStream(TClient& client, const OtaMetadata& metadata, const Sec
 
     br_sha256_update(&shaContext, buffer, chunk);
     if (Update.write(buffer, chunk) != chunk) {
-      Update.abort();
       logger.log(CODE_OTA_ERROR, "Falha ao escrever firmware OTA", uptime, String(Update.getError()));
       http.end();
       return false;
@@ -79,7 +77,6 @@ bool writeFirmwareStream(TClient& client, const OtaMetadata& metadata, const Sec
   String expected = metadata.sha256;
   expected.toLowerCase();
   if (String(calculated) != expected) {
-    Update.abort();
     logger.log(CODE_OTA_ERROR, "Hash SHA-256 do OTA invalido", uptime, calculated);
     http.end();
     return false;
@@ -108,9 +105,9 @@ bool OTAUpdate::apply(const OtaMetadata& metadata, uint32_t uptime) const {
   if (metadata.url.startsWith("https://")) {
     BearSSL::WiFiClientSecure client;
     client.setInsecure();
-    return writeFirmwareStream(client, metadata, security_, logger_, uptime);
+    return writeFirmwareStream(client, metadata, logger_, uptime);
   }
 
   WiFiClient client;
-  return writeFirmwareStream(client, metadata, security_, logger_, uptime);
+  return writeFirmwareStream(client, metadata, logger_, uptime);
 }

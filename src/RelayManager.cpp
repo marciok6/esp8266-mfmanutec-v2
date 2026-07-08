@@ -1,4 +1,4 @@
-#include "RelayManager.h"
+#include "../include/RelayManager.h"
 
 RelayManager::RelayManager(uint8_t pin) : pin_(pin) {}
 
